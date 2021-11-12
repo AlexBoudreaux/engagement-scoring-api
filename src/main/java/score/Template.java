@@ -1,5 +1,6 @@
 package score;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -12,5 +13,5 @@ import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 public class Template extends PanacheEntity {
   public String name;
   @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
-  public List<Section> sections;
+  public List<Section> sections = new ArrayList<>();;
 }

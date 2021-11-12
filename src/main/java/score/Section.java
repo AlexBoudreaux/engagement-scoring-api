@@ -1,6 +1,7 @@
 package score;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -17,7 +18,7 @@ public class Section extends PanacheEntity {
   public Long weight;
 
   @OneToMany(mappedBy = "section")
-  public List<PossibleResponse> possibleResponses;
+  public List<PossibleResponse> possibleResponses = new ArrayList<>();;
 
   @ManyToOne
   @JoinColumn(name = "FK_TemplateId")
