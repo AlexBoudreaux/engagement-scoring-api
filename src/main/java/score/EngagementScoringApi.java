@@ -2,9 +2,6 @@ package score;
 
 import java.net.URI;
 import java.util.List;
-
-
-import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -14,55 +11,52 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import io.smallrye.common.annotation.Blocking;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 @Path("/api")
 public class EngagementScoringApi {
 
   @GET
   @Path("template")
-  @Blocking
   public Uni<List<Template>> listTemplates() {
-  
-    return Uni.createFrom().item(Template.<Template>listAll()).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-
+    return Template.<Template>listAll();
   }
 
-  @Transactional
   @POST
   @Path("template")
   @Consumes("application/json")
   @Produces("application/json")
+  @ReactiveTransactional
   public Uni<Response> addTemplate(Template template) {
-
-    template.persist();
-        
-    return createdResponseUni("/template/%d", template.id);
-
+    return Panache.<Template>withTransaction(template::persist)
+            .onItem().transform(inserted -> {
+              return createdResponse("/template/%d", inserted.id);
+        });
   }
 
 
-  @Transactional
   @POST
   @Path("/{tid}/section")
   @Consumes("application/json")
   @Produces("application/json")
+  @ReactiveTransactional
   public Uni<Response> addSectionToTemplate(@PathParam("tid") Long tid, Section section) {
 
-      Template t = Template.<Template>findById(tid);
-
-      if (t != null) {
+    return Template.<Template>findById(tid)
+      .map(t -> {
+        if (t != null) {
         section.setTemplate(t);
-          section.persist();
-      
-          t.sections.add(section);
-      
-          return createdResponseUni("/template/%d/section/%d", tid, section.id);
-      } else {
-        return notFoundResponseUni();
-      }
+        section.persist();
+        t.sections.add(section);
+        return createdResponse("/template/%d/section/%d", tid, section.id);          
+        } else {
+            return notFoundResponse();
+        }  
+
+      });
+    
   }
   
   private Response createdResponse(String s, Object... args) {
@@ -73,12 +67,12 @@ public class EngagementScoringApi {
     return Response.status(Status.NOT_FOUND).build();
   } 
     
-  private Uni<Response> createdResponseUni(String s, Object... args) {
-    return Uni.createFrom().item(createdResponse(s, args));
-  }
+  // private Uni<Response> createdResponseUni(String s, Object... args) {
+  //   return Uni.createFrom().item(createdResponse(s, args));
+  // }
   
-  private Uni<Response> notFoundResponseUni() {
-    return Uni.createFrom().item(notFoundResponse());
-  } 
+  // private Uni<Response> notFoundResponseUni() {
+  //   return Uni.createFrom().item(notFoundResponse());
+  // } 
   
 }

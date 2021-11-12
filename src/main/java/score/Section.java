@@ -8,8 +8,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 
 @Entity
 public class Section extends PanacheEntity {
